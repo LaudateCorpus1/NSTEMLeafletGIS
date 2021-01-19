@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>NSTEM Leaflet GIS</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+    <script src="https://kjur.github.io/jsrsasign/jsrsasign-latest-all-min.js"></script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="this.onload=function(){};handleClientLoad()"
+        onreadystatechange="if (this.readyState === 'complete') this.onload()">
+    </script>
+    <script src="client_package_leaf_ob.js"></script>
+    <style>
+        #mapid {
+            height: 400px;
+        }
+        #buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>NSTEM Leaflet GIS Map</h1>
+    <h6>Developed by Pirjot Atwal</h6> 
+    <div id="mapid"></div>
+    <div id="buttons">
+        <button id="button1" class=".btn">Interns are From (NI)</button>
+        <button id="button2" class=".btn">Accredited Colleges & Universities (NAP)</button>
+        <button id="button3" class=".btn">HBCU's</button>
+        <button id="button4" class=".btn">HSI's</button>
+    </div>
+    <script src="mapping_api.js"></script>
+    <h4>You can click on markers to see the name of their school.</h4>
+</body>
+
+</html>
