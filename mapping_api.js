@@ -1,5 +1,4 @@
 //mapping_api.js Written by Pirjot Atwal
-console.log("MAP LOADING...");
 
 class SmartMarker {
     constructor(info = {
@@ -9,7 +8,7 @@ class SmartMarker {
         status: "off",
         filters: []
     }) {
-        this.marker = L.circleMarker([info.Lat, info.Lon]); // switch to marker
+        this.marker = L.circleMarker([info.Lat, info.Lon], {weight: 1, radius: 7});
         this.info = info;
         this.setupPopup();
     }
@@ -20,7 +19,17 @@ class SmartMarker {
         this.marker.remove();
     }
     setupPopup() {
-        this.marker.bindPopup(this.info.name).openPopup();
+        //University Name
+        var popupHeading = "<h4>" + this.info.name + "</h4>";
+        //Filters
+        var subHeading = "<h6>";
+        for (var filter of this.info.filters) {
+            subHeading += filter[0] + ", ";
+        }
+        subHeading = subHeading.slice(0, -2) + "</h6>";
+        //Address
+        var popupText = "<p>" + this.info.address +  "</p>";
+        this.marker.bindPopup(popupHeading + subHeading + popupText).openPopup();
     }
     toggle(filter) {
         for (var item of this.info.filters) {
@@ -39,6 +48,7 @@ class SmartMarker {
         for (var item of this.info.filters) {
             if (item[1] == "on") {
                 myStatus = "on";
+                this.marker.setStyle({color: item[2], fillColor: item[2]});
             }
         }
         this.info.status = myStatus;
@@ -52,13 +62,35 @@ class Map {
         this.createMap();
     }
     createMap(Lat = 0, Lon = 0, View = 1) {
-        this.mymap = L.map(this.divID, {preferCanvas: true}).setView([Lat, Lon], View);
+        //Create Map
+        this.mymap = L.map(this.divID, {
+            preferCanvas: true
+        }).setView([Lat, Lon], View);
+        //Set Tiles
         var tileURL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
         var attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
         this.tiles = L.tileLayer(tileURL, {
             attribution
         });
         this.tiles.addTo(this.mymap);
+        //Set Map Bounds
+        this.mymap.setMinZoom(4);
+        this.mymap.setMaxBounds([
+            [54, -163],
+            [20, -30]
+        ]);
+        this.mymap.fitBounds([
+            [52, -124],
+            [21, -67]
+        ]);
+
+        //Compass
+        this.mymap.addControl(new L.Control.Compass());
+        //Panning
+        L.control.pan().addTo(this.mymap);
+        //Search Control Button
+        this.searchControl = L.esri.Geocoding.geosearch().addTo(this.mymap);
+        this.searchControl.on('results', function (data) {});
     }
     addMarker(marker) {
         if (!this.markers.includes(marker)) {
@@ -114,21 +146,22 @@ class Map {
         this.rows = await get();
         var infos = [];
         for (var row of rows.slice(1)) {
-            if (row[0] && row[6] && row[7]) {
+            if (row && row.length >= 14 && row[0] && row[6] && row[7]) {
                 var info = {};
                 info.name = row[0];
+                info.address = row[1];
                 info.Lat = parseFloat(row[6]);
                 info.Lon = parseFloat(row[7]);
                 var filters = [];
                 var indexAndFilters = [
-                    [12, "NI"],
-                    [8, "NAP"],
-                    [14, "HBCU"],
-                    [13, "HSI"]
+                    [8, "NAP", "blue"],
+                    [12, "NI", "orange"],
+                    [14, "HBCU", "green"],
+                    [13, "HSI", "purple"]
                 ];
                 for (var item of indexAndFilters) {
                     if (row[item[0]]) {
-                        filters.push([item[1], "off"]);
+                        filters.push([item[1], "off", item[2]]);
                     }
                 }
                 info.status = "off";
@@ -142,28 +175,38 @@ class Map {
         this.toggleFilter("NI");
         //Initialize Buttons
         var IDs = [
-            ["button1", "NI"],
-            ["button2", "NAP"],
-            ["button3", "HBCU"],
-            ["button4", "HSI"]
+            ["button1", "NI", "orange"],
+            ["button2", "NAP", "blue"],
+            ["button3", "HBCU", "green"],
+            ["button4", "HSI", "purple"]
         ];
-        function attachToButton(map, id, value) {
+
+        function attachToButton(map, id, value, color) {
             var button = document.getElementById(id);
+            button.on = false;
             button.addEventListener("click", (evt) => {
+                button.on = !button.on;
+                if (button.on) {
+                    button.style = "background-color: " + color;
+                } else {
+                    button.style = "";
+                }
                 map.toggleFilter(value);
             });
         }
         for (var item of IDs) {
-            attachToButton(this, item[0], item[1]);
+            attachToButton(this, item[0], item[1], item[2]);
         }
     }
 }
 
 var myMap = null;
 
-function instruct() {
+async function instruct() {
+    console.log("MAP LOADING...");
     myMap = new Map('mapid');
-    myMap.init();
+    await myMap.init();
+    console.log('Map Loaded!');
 }
 
 document.addEventListener("DOMContentLoaded", (evt) => {

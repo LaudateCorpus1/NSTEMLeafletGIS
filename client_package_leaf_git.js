@@ -14,9 +14,7 @@ function handleClientLoad() {
 }
 
 async function init() {
-    var cred2 = "PRIVATE KEY";
-    var cred3 = "EMAIL";
-    var cred4 = ["https://sheets.googleapis.com/$discovery/rest?version=v4"];
+    var CREDENTIALS_HERE;
     var pHeader = {
         "alg": "RS256",
         "typ": "JWT"
@@ -79,6 +77,20 @@ async function get(subsheet = "") {
         range: subsheet + '!A1:Z',
     }).then(function (response) {
         rows = response.result.values;
+        if (!rows) {
+            rows = [];
+        }
+        var rowMax = 0;
+        for (var row of rows) {
+            if (row.length > rowMax) {
+                rowMax = row.length;
+            }
+        }
+        for(var row of rows) {
+            for (var i = rowMax - row.length; i > 0; i--) {
+                row.push("");
+            }
+        }
         return rows;
     });
 }

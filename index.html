@@ -3,22 +3,33 @@
 
 <head>
     <title>NSTEM Leaflet GIS</title>
+    <!-- Leaflet/Esri/Compass Dependencies -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-        crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-        crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet@2.5.3/dist/esri-leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder@2.3.3/dist/esri-leaflet-geocoder.css">
+    <script src="https://unpkg.com/esri-leaflet-geocoder@2.3.3/dist/esri-leaflet-geocoder.js"></script>
+    <!-- Compass -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-compass@1.5.5/src/leaflet-compass.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-compass@1.5.5/src/leaflet-compass.min.css">
+    <!-- Panning -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.pancontrol@1.0.0/src/L.Control.Pan.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.pancontrol@1.0.0/src/L.Control.Pan.min.css">
+
+    <!-- GAPI Dependencies -->
     <script src="https://kjur.github.io/jsrsasign/jsrsasign-latest-all-min.js"></script>
     <script async defer src="https://apis.google.com/js/api.js" onload="this.onload=function(){};handleClientLoad()"
         onreadystatechange="if (this.readyState === 'complete') this.onload()">
     </script>
-    <script src="client_package_leaf_ob.js"></script>
+    <script src="client_package_leaf.js"></script>
+
+    
     <style>
         #mapid {
             height: 400px;
         }
+
         #buttons {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -28,7 +39,7 @@
 
 <body>
     <h1>NSTEM Leaflet GIS Map</h1>
-    <h6>Developed by Pirjot Atwal</h6> 
+    <h6>Developed by Pirjot Atwal</h6>
     <div id="mapid"></div>
     <div id="buttons">
         <button id="button1" class=".btn">Interns are From (NI)</button>
@@ -36,8 +47,9 @@
         <button id="button3" class=".btn">HBCU's</button>
         <button id="button4" class=".btn">HSI's</button>
     </div>
-    <script src="mapping_api.js"></script>
+    
     <h4>You can click on markers to see the name of their school.</h4>
 </body>
 
+    <script src="mapping_api.js"></script>
 </html>
