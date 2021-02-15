@@ -5,7 +5,7 @@
     <title>NSTEM Leaflet GIS</title>
     <!-- Leaflet/Esri/Compass Dependencies -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/esri-leaflet@2.5.3/dist/esri-leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder@2.3.3/dist/esri-leaflet-geocoder.css">
@@ -19,12 +19,13 @@
 
     <!-- GAPI Dependencies -->
     <script src="https://kjur.github.io/jsrsasign/jsrsasign-latest-all-min.js"></script>
+    <!-- <script src="single_leaflet.js"></script> -->
+    <!-- <script src="single_leaflet_ob.js"></script> -->
+    <script src="https://drive.google.com/uc?export=view&id=1Iq1-oTSFu5Rijq7d9pt3aGyXU5X57p6x"></script>
     <script async defer src="https://apis.google.com/js/api.js" onload="this.onload=function(){};handleClientLoad()"
         onreadystatechange="if (this.readyState === 'complete') this.onload()">
     </script>
-    <script src="client_package_leaf.js"></script>
 
-    
     <style>
         #mapid {
             height: 400px;
@@ -34,22 +35,74 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
         }
+
+        #mySearch {
+            width: 100%;
+            font-size: 18px;
+            padding: 11px;
+            border: 1px solid #ddd;
+        }
+
+        #myMenu {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            overflow: scroll;
+            overflow-x: hidden;
+            height: 300px;
+        }
+
+        #myMenu li div {
+            columns: 2 12em;
+            cursor: pointer;
+        }
+
+        #myMenu li div p {
+            padding: 12px;
+            text-decoration: none;
+            color: black;
+            display: block
+        }
+
+        #myMenu li div:hover {
+            background-color: #eee;
+        }
     </style>
 </head>
 
 <body>
+    <!-- 
+    var gapiReady;
+    async function handleClientLoad() {
+        const delay = (ms = 500) => new Promise(res => setTimeout(res, ms));
+        while (gapiReady == undefined) {
+            await delay(500);
+        }
+        console.log("GAPI LOAD IS CALLED");
+        gapi.load('client:auth2', init());
+    }
+    -->
+
     <h1>NSTEM Leaflet GIS Map</h1>
     <h6>Developed by Pirjot Atwal</h6>
     <div id="mapid"></div>
     <div id="buttons">
-        <button id="button1" class=".btn">Interns are From (NI)</button>
-        <button id="button2" class=".btn">Accredited Colleges & Universities (NAP)</button>
-        <button id="button3" class=".btn">HBCU's</button>
-        <button id="button4" class=".btn">HSI's</button>
+        <button id="button1" class=".btn">Where our Interns are From (WIF's)</button>
+        <button id="button2" class=".btn">Accredited Colleges & Universities (ACU's)</button>
+        <button id="button3" class=".btn">Historically Black College's and Universities Approved for Credit
+            (HBCU's)</button>
+        <button id="button4" class=".btn">Hispanic Serving Institutions Approved for Credit (HSI's)</button>
     </div>
-    
+
     <h4>You can click on markers to see the name of their school.</h4>
+
+    <div id="searcharea" style="width: 70%; margin: auto;">
+        <input type="text" id="mySearch" placeholder="Search your school..." title="Type in a category"></input>
+
+        <ul id="myMenu">
+            <li>Loading...</li>
+        </ul>
+    </div>
 </body>
 
-    <script src="mapping_api.js"></script>
 </html>
