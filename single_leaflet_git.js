@@ -1,4 +1,18 @@
-//single_leaflet_git.js, developed by Pirjot Atwal, supports one endpoint and simple functionality to push only
+/** single_leaflet.js
+ * This file contains a combination of the code in both mapping_api
+ * and client_package_leaf. The code authenticates the user using
+ * self-provided and hardcoded credentials in the forms of strings
+ * then uses the Leaflet library to inject a map onto the screen
+ * with markers built from the Educated Partners Spreadsheet.
+ * The code also injects into a Searching Utility on the page
+ * which is connected to the Map to allow the user to search
+ * schools.
+ * 
+ * @file single_leaflet.js
+ * @author Pirjot Atwal
+ */
+
+
 //NOTE: MAKE SURE TO INCLUDE FOLLOWING TAGS IN HTML FILE.
 //<script src = "http://kjur.github.io/jsrsasign/jsrsasign-latest-all-min.js"></script>
 //<script async defer src="https://apis.google.com/js/api.js"
@@ -7,16 +21,40 @@
 // </script>
 //<script src = "client_package.js"></script>
 
+/**
+ * The gapiReady variable helps in the get method below to 
+ * ensure that async behavior does cause the GAPI to fetch
+ * without being authenticated beforehand. It also helps
+ * with the handleClientLoad function which is extended
+ * in the index.html file.
+ */
 var gapiReady = false;
 
+/**
+ * Loads the gapi, comes from the gapi template.
+ */
 function handleClientLoad() {
     gapi.load('client:auth2', init());
 }
 
+/**
+ * init (called by handleClientLoad above) takes hardcoded credentials
+ * and authenticates the Google API with them. Make sure that the
+ * tester email has access to the resources it's using (by sharing
+ * the documents with that email).
+ */
 async function init() {
+    /**
+     * Credentials provided through Google Developer
+     * Console.
+     */
     var cred2 = "PRIVATEKEY";
     var cred3 = 'SERVICEEMAIL';
     var cred4 = ["https://sheets.googleapis.com/$discovery/rest?version=v4"];
+    /**
+     * Following code adapted from stackoverflow:
+     * https://stackoverflow.com/questions/28751995/how-to-obtain-google-service-account-access-token-javascript
+     */
     var pHeader = {
         "alg": "RS256",
         "typ": "JWT"
@@ -52,6 +90,10 @@ async function init() {
         gapi.auth.setToken({
             access_token: response["access_token"]
         });
+        /**
+         * API Key provided by Google Developer Console.
+         * gapiReady gets set to true once authenticated.
+         */
         gapi.client.init({
             apiKey: 'APIKEY',
             discoveryDocs: cred4
@@ -67,11 +109,17 @@ async function init() {
     XHR.send(urlEncodedData);
 }
 
+/** get
+ * Get grabs the rows from the hardcoded
+ * ENDURL and returns it in a promise.
+ * @param {*} subsheet Subsheet name in spreadsheet
+ */
 async function get(subsheet = "") {
     const delay = (ms = 500) => new Promise(res => setTimeout(res, ms));
     while (!gapiReady) {
         await delay(50);
     }
+    //Hardcoded URL to Educated Partners GIS Spreadsheet
     var ENDURL = "SHEETURL";
     var ENDPOINT = new RegExp("\\/d\\/(.*?)(\\/|$)").exec(ENDURL)[1];
     return await gapi.client.sheets.spreadsheets.values.get({
@@ -105,7 +153,7 @@ async function get(subsheet = "") {
 //mapping_api.js Written by Pirjot Atwal
 
 /**
- * Must match corresponding harcoded values in init filter Names and indexAndFilters Names.
+ * Must match corresponding hardcoded values in init filter Names and indexAndFilters Names.
  */
 var IDs = [
     ["button1", "WIF", "orange"],
@@ -114,7 +162,17 @@ var IDs = [
     ["button4", "HSI", "red"]
 ];
 
+/**
+ * The SmartMarker class holds all the information that a
+ * marker needs to display its information and the corresponding node.
+ */
 class SmartMarker {
+    /**
+     * SmartMarker constructs, creates a SmartMarker
+     * and sets up its Popup.
+     * this.filters is an array of arrays of type: ["WIF", "off", "orange"]
+     * @param {*} info JSON format
+     */
     constructor(info = {
         name: "DEFAULT",
         Lat: 0,
@@ -126,12 +184,19 @@ class SmartMarker {
         this.info = info;
         this.setupPopup();
     }
+    /**
+     * Following functions extend L.circleMarker functions.
+     */
     addTo(map) {
         this.marker.addTo(map);
     }
     remove() {
         this.marker.remove();
     }
+    /**
+     * Sets up popup with given info and binds it to
+     * this.marker.
+     */
     setupPopup() {
         //University Name
         var popupHeading = "<h4>" + this.info.name + "</h4>";
@@ -145,6 +210,11 @@ class SmartMarker {
         var popupText = "<p>" + this.info.address +  "</p>";
         this.marker.bindPopup(popupHeading + subHeading + popupText).openPopup();
     }
+    /**
+     * Toggles a given filter in this.filters if that
+     * filter's name (filter[0]) matches the passed in parameter.
+     * Then updates this SmartMarker's status.
+     */
     toggle(filter) {
         for (var item of this.info.filters) {
             if (item[0] == filter) {
@@ -157,6 +227,15 @@ class SmartMarker {
         }
         this.updateStatus();
     }
+    /**
+     * updateStatus sets this SmartMarkers info.status
+     * to on or off correctly. If any of the filters
+     * of a marker or on, then that marker is considered on.
+     * Otherwise it is considered off.
+     * If a marker was newly set to on, then it's color
+     * will change to the latest filter that was turned
+     * on.
+     */
     updateStatus() {
         var myStatus = "off";
         for (var item of this.info.filters) {
@@ -169,12 +248,36 @@ class SmartMarker {
     }
 }
 
+/**
+ * The NSTEMMap class is used to initialize the a NSTEMMAP object
+ * with the information found in the Educated Partners spreadsheet,
+ * where certain columns in the spreadsheet are expected to
+ * hold either the name, address, lat, lon, or "filter/tag." The
+ * instance then injects a LeafletMap on the page into a div
+ * with the provided id, initializes all the smartMarkers for 
+ * all the rows in spreadsheet, and finally initializes
+ * the "search console" on the page with the hardcoded id of
+ * "mySearch" and "myMenu."
+ * 
+ * It is expected for full use that the user calls init seperately
+ * to set up all the markers on the page.
+ */
 class NSTEMMap {
+    /**
+     * Initializes an empty array for markers and
+     * calls createMap to inject the Leaflet Map.
+     * @param id The ID of a mapDIV on the page.
+     */
     constructor(id) {
         this.divID = id;
         this.markers = [];
         this.createMap();
     }
+    /**
+     * Injects a Leaflet Map into a div with this.id as an id.
+     * Sets the Zoom and Bounds to hardcoded values.
+     * Adds plugins for control.
+     */
     async createMap(Lat = 0, Lon = 0, View = 1) {
         //Create Map
         this.mymap = L.map(this.divID, {
@@ -197,17 +300,21 @@ class NSTEMMap {
             [52, -124],
             [21, -67]
         ]);
-        //Compass
-        this.mymap.addControl(new L.Control.Compass());
+        //Compass was removed from this line
         //Panning
         L.control.pan().addTo(this.mymap);
         //Search Control Button
         this.searchControl = L.esri.Geocoding.geosearch().addTo(this.mymap);
         this.searchControl.on('results', function (data) {});
     }
+    /**
+     * Pushes SmartMarker to this map's array if it doesn't
+     * already exist there.
+     * Displays the marker if it's status is on.
+     */
     addMarker(marker) {
         if (!this.markers.includes(marker)) {
-            this.pushMarker(marker)
+            this.pushMarker(marker);
         }
         if (marker.info.status == "on") {
             marker.addTo(this.mymap);
@@ -216,17 +323,36 @@ class NSTEMMap {
     pushMarker(marker) {
         this.markers.push(marker);
     }
+    /**
+     * Creates a marker with the provided JSON info.
+     */
     createMarker(info) {
         var marker = new SmartMarker(info);
         this.pushMarker(marker);
         this.addMarker(marker);
     }
+    /**
+     * Removes the marker from the Leaflet Map.
+     * Does not remove it from the NSTEMMap's memory
+     * since it can be displayed later.
+     */
     hideMarker(marker) {
         if (this.markers.includes(marker) && marker.info.status == "off") {
             marker.remove();
         }
     }
-    toggleFilter(filter = "NI") {
+    /**
+     * Toggles a provided filter name on or off.
+     * this.filters is initialized in init.
+     * Goes through this.filters and turns it on or off,
+     * then goes through all of this.markers and 
+     * turns it on or off with a certain filter name.
+     * Then, for every marker, if it's status is on or off,
+     * it is added or removed to this instance.
+     * @param {string} filter a filtername
+     */
+    toggleFilter(filter = "WIF") {
+        //Update this.filters
         for (var item of this.filters) {
             if (item.name == filter) {
                 if (item.status == "off") {
@@ -236,6 +362,7 @@ class NSTEMMap {
                 }
             }
         }
+        //Update all markers
         for (var marker of this.markers) {
             marker.toggle(filter);
             if (marker.info.status == "on") {
@@ -245,6 +372,22 @@ class NSTEMMap {
             }
         }
     }
+    /**
+     * init does all the big work for NSTEMMap.
+     * It first initializes this.filters with JSON objects
+     * of name = "WIF,etc." and status = "off."
+     * It then retrieves all the data from the Educated
+     * Partners Sheet and for every row in the data,
+     * creates a seperate "info" JSON variable for that marker.
+     * It iterates through all of these JSON variables and 
+     * pushes a new SmartMarker with that information to this.markers.
+     * Next, init initializes the buttons with the data found in 
+     * the global IDs variable. Those buttons are given the ability
+     * to toggle the filter associated with their name. Lastly
+     * the function turns on the first filter with the hardcoded
+     * "button1" and finally calls on NSTEMMap to initialize
+     * the search console/engine.
+     */
     async init() {
         //Initialize Filters
         this.filters = [];
@@ -308,6 +451,16 @@ class NSTEMMap {
         //Initialize Search Engine
         await this.initSearchEngine();
     }
+    /**
+     * initSearchEngine initializes all the list items in the
+     * div myMenu and provides them the ability to interact
+     * with the map and to toggle filters.
+     * Most of the code is self-explanatory.
+     * Zoom value is hardcoded to 13 when zooming in on a marker.
+     * The SearchMenu causes Institution names to disappear
+     * if they match the given user input by changing their
+     * CSS style display to "none" or "".
+     */
     async initSearchEngine() {
         //Get Search Bar and Menu with Filters
         var map = this.mymap;
@@ -372,6 +525,9 @@ class NSTEMMap {
     }
 }
 
+/**
+ * All hardcoded values below.
+ */
 var myMap = null;
 
 async function instruct() {
